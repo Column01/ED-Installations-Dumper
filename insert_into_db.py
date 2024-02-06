@@ -19,27 +19,27 @@ def process_file(file):
     if file.endswith('.bz2'):
         # If the file is a bz2 file, open it using bz2
         with bz2.open('downloads/' + file, 'rt') as f:
-            for line in f:
-                # Treat each line as JSON and insert it into the database
-                doc = json.loads(line)
-                collection.insert_one(doc)
+            text = f.read().strip()
+            lines = [json.loads(line) for line in text.split("\n")]
+            collection.insert_many(lines)
+
     elif file.endswith('.jsonl'):
         # If the file is a jsonl file, open it normally
         with open('downloads/' + file, 'r') as f:
-            for line in f:
-                # Treat each file as JSON and insert it into the database
-                doc = json.loads(line)
-                collection.insert_one(doc)
+            text = f.read().strip()
+            lines = [json.loads(line) for line in text.split("\n")]
+            collection.insert_many(lines)
+
     duration = time.time() - start_time
     shutil.move(os.path.join("downloads", file), os.path.join("downloads/processed", file))
     return (file, duration)
 
 def process_files(files):
-    results = [process_file(file) for file in tqdm(files) if not os.path.isdir(os.path.join("downloads", file))]
+    results = [process_file(file) for file in tqdm(files)]
 
 
 # Iterate over the files in the downloads folder
-files = os.listdir('downloads')
+files = [file for file in os.listdir('downloads') if not os.path.isdir(os.path.join("downloads", file))]
 print(f"Processing {len(files)} files")
 t0 = time.time()
 process_files(files)
