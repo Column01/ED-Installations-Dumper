@@ -1,9 +1,13 @@
 import json
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
 
 from helpers import bytes_to_size_string, size_string_to_bytes
+
+# Datetime object for the date before update 17 to ensure we only download important files
+UPDATE_17_DATETIME = datetime.strptime('2023-Oct-15 12:00:00', '%Y-%b-%d %H:%M:%S')
 
 
 def find_files(url):
@@ -29,44 +33,54 @@ def find_files(url):
         entry_size = row.find('td', {'class': 's'})
 
         # Skip entries that are not relevant
-        if entry_name is None or entry_type is None or entry_modified is None:
+        if entry_name is None or entry_type is None or entry_modified is None or entry_modified.text is None:
             continue
         
-        print(entry_modified)
-        entry_url = entry_name.find('a')
+        # Try to generate a datetime object from the file modified attribute, skip files that do not have this info
+        try:
+            file_modified_date = datetime.strptime(entry_modified.text, '%Y-%b-%d %H:%M:%S')
+        except ValueError:
+            continue
 
-        # Check if the entry type is a directory
-        if entry_type.text == 'Directory':
-            if entry_url:
+        # Only index files after update 17 (when SignalType was added)
+        if file_modified_date >= UPDATE_17_DATETIME:
+            entry_url = entry_name.find('a')
+
+            # Check if the entry type is a directory
+            if entry_type.text == 'Directory':
+                if entry_url:
+                    # Get the text of the "a" tag
+                    directory_name = entry_url.text
+                    # Skip dev and beta directory
+                    if directory_name in ["dev", "beta"]:
+                        continue
+                    # Get the "href" attribute of the "a" tag
+                    href = entry_url['href']
+                    # Add the directory to the directories list
+                    directories.append({
+                        "name": directory_name,
+                        "url": url + href
+                    })
+            else:
                 # Get the text of the "a" tag
-                directory_name = entry_url.text
-                # Skip dev and beta directory
-                if directory_name in ["dev", "beta"]:
+                file_name = entry_name.text
+                # Skip test files
+                if "Test" in file_name:
                     continue
                 # Get the "href" attribute of the "a" tag
                 href = entry_url['href']
-                # Add the directory to the directories list
-                directories.append({
-                    "name": directory_name,
+                
+                # Convert the file size string to bytes and add it to the total file size variable
+                file_size = size_string_to_bytes(entry_size.text)
+                total_size += file_size
+
+                # Add the file to the files list
+                files.append({
+                    "file_name": file_name,
+                    "file_size": file_size,
+                    "file_type": entry_type.text,
                     "url": url + href
                 })
-        else:
-            # Get the text of the "a" tag
-            file_name = entry_name.text
-            # Get the "href" attribute of the "a" tag
-            href = entry_url['href']
-            
-            # Convert the file size string to bytes and add it to the total file size variable
-            file_size = size_string_to_bytes(entry_size.text)
-            total_size += file_size
-
-            # Add the file to the files list
-            files.append({
-                "file_name": file_name,
-                "file_size": file_size,
-                "file_type": entry_type.text,
-                "url": url + href
-            })
 
     # Return both lists
     return files, directories
@@ -103,6 +117,6 @@ total_size = 0
 
 crawl_all(total_files)
 
-print(directories_scanned)
+print(f"Directories scanned: {directories_scanned}")
 
 print(f"Total file size: {bytes_to_size_string(total_size)}")

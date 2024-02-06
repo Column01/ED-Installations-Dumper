@@ -14,7 +14,7 @@ This code was written to index, download, process and dump the FSSSignalDiscover
 
 The workflow for generating a dump is somewhat manual at this time. This could be automated using a batch/shell script to run the scripts or programmatically using python if you'd like
 
-**NOTE:** This process will use a reasonable amount of disk space (at the time of writing, approximately ~40-50GB of free space is required)
+**NOTE:** This process will use a reasonable amount of disk space, as of writing its between 5-10GB of disk space needed
 
 ### Index edgalaxydata
 
@@ -22,17 +22,17 @@ To do this, you need to run the `gather_files.py` script. You can do so like so:
 
 To run the script, use the following command: `python gather_files.py`
 
-This will print in the terminal some output about which url its working on and how many files it finds. This should take a few minutes to complete as it is quite a few files.
+This will print in the terminal some output about which url its working on and how many files it finds. This should take a few minutes to complete as it is quite a few files. This will also only index files created after Update 17 as thats when the `SignalType` attribute was added.
 
 ### Download the log files we care about
 
-Once the files have been indexed, we need to use the `download_by_type.py` script to download the `FSSSignalDiscovered` files that we care about. When the script is run it will calculate the storage space required to house the files and ask for confirmation from the user before proceeding.
+Once the files have been indexed, we need to use the `download_by_type.py` script to download the `FSSSignalDiscovered` files that we care about. When the script is run it will calculate the storage space required to house the files and ask for confirmation from the user before proceeding. If run multiple times, it will skip files that are already downloaded so no need to worry about that.
 
 To run the script, use the following command: `python download_by_type.py`
 
 ### Insert the data into the database
 
-Now that we have downloaded all the files we care about, we need to process them and insert them all into the MongoDB. This process will take a **LONG** time to complete, for me the import took ~3h on my computer using a 5600x with 32GB of RAM with both the dump files and database being on an NVME drive. As of writing is not designed to be done more than once (**I will touch more on that later though**). This process can be initiated by running the `insert_into_db.py` script.
+Now that we have downloaded all the files we care about, we need to process them and insert them all into the MongoDB. This process will take a long time to complete. This process can be initiated by running the `insert_into_db.py` script. The script should ignore files already processed so duplicate data should not be inserted.
 
 To run the script, use the following command: `python insert_into_db.py`
 
@@ -43,18 +43,6 @@ Finally, to generate a dump we need to run the `generate_installations_dump.py` 
 When the script is run, it will generate a file called `installations.json` containing every known installations from the EDDN dumps we downloaded
 
 To run the script, use the following command: `python generate_installations_dump.py`
-
-## Additional Notes
-
-### Repeat runs
-
-As new data is added to the EDDN dumps provided graciously by [edgalaxydata](https://edgalaxydata.space/), the installations dump will become outdated. In order to update the dump at this time it would require manual deletion of the MongoDB collection storing the data followed by a reimport of it all.
-
-This *could* be alleviated by moving all processed files out of the downloads folder (done after the new files are downloaded) or by adding a cache of processed files to the `insert_into_db.py` script, but at this time I do not plan to do so as I'm burnt out staring at the database insertion taking 3 hours LOL
-
-### Optimizations
-
-The data downloaded doesn't all contain the info we need, this code relies on the `SignalType` attribute being set in the files which was not present up until Update 17 (October 2023). I plan to optimize the code and alter it to only download and process files that contain this `SignalType` attribute by ignoring files created before this date, but as of writing it doesn't care when the files were created.
 
 ## Legal
 
