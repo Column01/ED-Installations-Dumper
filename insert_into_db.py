@@ -1,8 +1,8 @@
 import bz2
 import json
 import os
-import time
 import shutil
+import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
@@ -31,7 +31,7 @@ def process_file(file):
                 doc = json.loads(line)
                 collection.insert_one(doc)
     duration = time.time() - start_time
-    shutil.move(file, os.path.join("downloads/processed", file))
+    shutil.move(os.path.join("downloads", file), os.path.join("downloads/processed", file))
     return (file, duration)
 
 def process_files_parallel(files):

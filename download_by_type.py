@@ -14,8 +14,9 @@ def download_file(file_blob):
     t0 = time.time()
     url = file_blob["url"]
     file_name = os.path.join("downloads", file_blob["file_name"])
+    file_name_processed = os.path.join("downloads/processed", file_blob["file_name"])
     # Download the file if we don't already have it
-    if not os.path.exists(file_name):
+    if not os.path.exists(file_name) and not os.path.exists(file_name_processed):
         try:
             r = requests.get(url)
             with open(file_name, 'wb') as f:
@@ -64,7 +65,7 @@ with open("files.json", "r") as fp:
     
     # Ask for confirmation and finally download the files
     print("="*20, "\n")
-    print(f"You are about to download {num_files} totalling {bytes_to_size_string(total_size)} of data!")
+    print(f"You are about to download {num_files} files totalling {bytes_to_size_string(total_size)} of data!")
     choice = input("Would you like to proceed? (Y/N): ")
     print("="*20, "\n")
     if choice.lower() == "y":
