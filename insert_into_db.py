@@ -34,16 +34,8 @@ def process_file(file):
     shutil.move(os.path.join("downloads", file), os.path.join("downloads/processed", file))
     return (file, duration)
 
-def process_files_parallel(files):
-    cpus = 4
-    print(f"Starting file import with {cpus} threads")
-    results = ThreadPool(cpus).imap_unordered(process_file, files)
-
-    for result in results:
-        print(f'File: {result[0]} processed in {result[1]:.2f}s')
-
 def process_files(files):
-    results = [process_file(file) for file in tqdm(files)]
+    results = [process_file(file) for file in tqdm(files) if not os.path.isdir(os.path.join("downloads", file))]
 
 
 # Iterate over the files in the downloads folder
@@ -52,3 +44,4 @@ print(f"Processing {len(files)} files")
 t0 = time.time()
 process_files(files)
 print(f"Processed files in {time.time() - t0}s")
+time.sleep(1)

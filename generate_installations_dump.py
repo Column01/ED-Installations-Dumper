@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from tqdm import tqdm
 import pymongo
 
 # Connect to MongoDB
@@ -26,7 +27,7 @@ projection = {
         }
     }
 }
-
+print("Collecting entries that have installations and filtering out duplicate results...")
 # Find all signals that match the query
 signals = collection.find(query, projection=projection)
 
@@ -34,7 +35,7 @@ signals = collection.find(query, projection=projection)
 unique_systems = {}
 num_signals = 0
 # Iterate through the signals
-for signal in signals:
+for signal in tqdm(signals):
     num_signals += 1
     # Get the system name
     system_name = signal["message"]["StarSystem"]
@@ -54,13 +55,13 @@ for signal in signals:
 # Convert the dictionary to a list of unique signals
 unique_signals = list(unique_systems.values())
 
-# unique_systems_copy = unique_systems.copy()
+unique_systems_copy = unique_systems.copy()
 
 for system_name, signal in unique_systems.items():
-    unique_systems[system_name]["_id"] = str(signal["_id"])
+    unique_systems[system_name].pop("_id")
 
-
+print("Dumping installations to file...")
 with open("installations.json", "w+") as fp:
     json.dump(dict(sorted(unique_systems.items())), fp, indent=2)
 
-print(f"Filtered {num_signals} down to {len(unique_signals)} signals.")
+print(f"Filtered {num_signals} down to {len(unique_signals)} signals and dumped to file!")

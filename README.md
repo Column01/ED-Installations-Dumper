@@ -22,7 +22,7 @@ To do this, you need to run the `gather_files.py` script. You can do so like so:
 
 To run the script, use the following command: `python gather_files.py`
 
-This will print in the terminal some output about which url its working on and how many files it finds. This should take a few minutes to complete as it is quite a few files. This will also only index files created after Update 17 as thats when the `SignalType` attribute was added.
+This will print in the terminal some output about which url its working on and how many files it finds. This should take about a minute to complete as it is quite a few files. This will also only index files created after Update 17 as thats when the `SignalType` attribute was added.
 
 ### Download the log files we care about
 
