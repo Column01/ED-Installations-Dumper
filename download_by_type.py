@@ -56,11 +56,16 @@ with open("files.json", "r") as fp:
     # Filter function to filter for the file type we care about
     is_type = lambda file_blob: FILE_TYPE in file_blob["file_name"]
 
+    not_exist = lambda file_blob: not os.path.exists(os.path.join("downloads", file_blob["file_name"])) and not os.path.exists(os.path.join("downloads/processed", file_blob["file_name"]))
+
     # Apply the filter to the list of files to return files we care about
-    filtered_files = list(filter(is_type, files["files"]))
+    filtered_files = list(filter(not_exist, filter(is_type, files["files"])))
 
     # Initialize some metrics
     num_files = len(filtered_files)
+
+    if num_files == 0:
+        quit("There are no new files to download! Please check again later.")
     total_size = sum([file_blob["file_size"] for file_blob in filtered_files])
     
     # Ask for confirmation and finally download the files
