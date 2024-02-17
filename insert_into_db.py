@@ -3,8 +3,6 @@ import json
 import os
 import shutil
 import time
-from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
 
 from pymongo import MongoClient
 from tqdm import tqdm
